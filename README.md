@@ -4,7 +4,14 @@ CLI Chef is a simple command line interface wrapper for Ruby. It is made to make
 
 CLI Chef is part of the BBLib (Brandon Black Library) for Ruby. BBLib is a requirement and includes a large number of other useful methods that help make CLI Chef easier to use. You can read documentation here: (BBLib)[https://github.com/bblack16/bblib-ruby].
 
+###Disclaimer
+
+CLI Chef is in a very early state. It is functional, but not heavily tested. As such, it will likely undergo frequent changes and may be buggy. Use at your own risk.
+
 ## Installation
+
+
+__Note:__ Currently this gem is not available via RubyGems. Once it is the following is how to install it. For now, grab it from github.
 
 Add this line to your application's Gemfile:
 
@@ -247,6 +254,16 @@ puts sz.preheat(:extract, {archive:'D:/test/test.7z'})
 puts sz.cook(:extract, {archive:'D:/test/test.7z'})
 #=> {:response=>"\n7-Zip [64] 15.06 beta : Copyright (c) 1999-2015 Igor Pavlov : 2015-08-09\n\nScanning the drive for archives:\n1 file, 1357418 bytes (1326 KiB)\n\nExtracting archive: D:\\test\\test.7z\n--\nPath = D:\\test\\test.7z\nType = 7z\nPhysical Size = 1357418\nHeaders Size = 1724\nMethod = LZMA2:6m LZMA:48k BCJ\nSolid = +\nBlocks = 3\n\nEverything is Ok\n\nFolders: 4\nFiles: 110\nSize:       4895076\nCompressed: 1357418\n", :exit=>{:code=>0, :desc=>"No error"}}
 ```
+
+### The Menu
+
+Cookbook has a method called _men_ which prints out a list of all recipes with descriptions and details as well as all ingredients and their descriptions and details. It is constructed to be somewhat of a --help page for the wrapper.
+
+## Examples
+
+A small subset of example wrappers comes with this gem. Currently only 7Zip is completed. For an example of how the framework currently works, look at the source code for it.
+
+More coming soon...
 
 ## Development
 
