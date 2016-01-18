@@ -112,12 +112,13 @@ end
 There are a couple of ways to add ingredients to a cookbook during initialization within the _setup_ingredients_ method. Both are shown above in the sample code for a 7Zip wrapper.
 
 
-*1 Add Ingredient to @cabinet*
+__1 Add Ingredient to @cabinet__
+
   As shown above, an Ingredient object can be created and passed into the _add_ingredient_ method of @cabinet.
 
 
-*2 Parse From Separated Values*
-  For additional convenience, the Cabinet class can parse text such as tsv or csv to generate Ingredients quickly. This allows you to setup the CLI arguments in an application such as excel and have the Cabinet parse them into Ingredients. The SV must include headers as the first row and must include at least the header 'name'. The following list may also be specified in the SV:
+__2 Parse From Separated Values__
+  For additional convenience, the Cabinet class can parse text such as tsv or csv to generate Ingredients quickly. This allows you to setup the CLI arguments in an application such as Excel and have the Cabinet parse them into Ingredients. The SV must include headers as the first row and must include at least the header 'name'. The following list may also be specified in the SV:
 
 
 - *name* (required) - A string name. Use lower case and avoid spaces. Any spaces will be replaced with underscores. Symbols are stripped as well, so stick to alpha-numeric chars.
@@ -135,6 +136,29 @@ There are a couple of ways to add ingredients to a cookbook during initializatio
 - *aliases* - A pipe ('|') separated list of aliases for this ingredient. Avoid naming conflicts with other ingredients and their aliases.
 
 - *allowed_values* - A pipe separated list of allowed values for this ingredient. If values are strings, they need to be encapsulated by single quotes (such as 'zip'). Anything left without quotes will be treated literally in Ruby. So String, would mean any String object is allowed.
+
+### Ingredients
+
+Ingredients (arguments) are components of a full command to be executed by the Cookbook. Ingredients are comprised of the following attributes:
+
+- *name*: The name of this ingredient. This MUST be unique across all Ingredients in the Cabinet. It should be a symbol with no symbol characters or white spaces. A String object can be passed as the name, but it will be downcased, striped of symbols and have all white space replaced by underscores.
+
+- *description*: This should describe the Ingredient and what it does. Place descriptions of the options here as well. This attribute is optional, but recommended.
+
+- *default*: This the default value of the ingredient. Generally this is set to nil. When an Ingredient is contructed, the symbol :default being passed as the value with be converted to this.
+
+- *flag*: The flag for this Ingredient. Not all arguments have a flag, so this should be nil if it is one of those. This should be a string. (EX: '-c', 't', '--help').
+
+- *spacer*: The spacer is used to divide the flag and the value. By default it is nil, which means there is no space. So an Ingredient with a '-c' flag and a 'Text' value would be constructed as '-cTest'. This may typically be a space (' '). The same example with the spacer set to ' ' would construct like '-c Test'.
+
+- *encapsulator*: Used to encapsulate a value. Commonly left nil or as a quote or single quote. For instance, a file path that could have spaces may need this to be set to '"'. The toggle encap_space_values controls whether or not the encapsulator is used. If encap_space_values is set to true, the encapsulator will only be added to the value if it contains a space. This is the default behavior.
+
+- *encap_space_values*: _See encapsulator above._
+
+- *aliases*: An array of aliases for this ingredient. This must also be unique, just like the name. This means unique across all Ingredient names AND aliases.
+
+- *allowed_values*: An array of allowed values to this Ingredient. These can be objects such as specific strings or numbers or classes or regular expressions. If the value equates to true against the '===' with any of these allowed values it is permitted.
+
 
 ## Development
 
