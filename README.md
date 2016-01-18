@@ -32,7 +32,7 @@ CLI Chef is made up of the following components:
 
 ### Cookbook
 
-Cookbooks are the core class of CLI Chef. It is meant to be an abstract class from which CLI wrappers can be constructed. It handles a lot of the basics by default, but requires a few setup methods to be implemented in any sub-classes.
+Cookbooks are the core class of CLI Chef. It is meant to be an abstract class from which CLI wrappers can be constructed. It handles a lot of the work needed by default, but requires a few setup methods to be implemented in any of its sub-classes.
 
 To create a new cookbook you simple create a new class that inherits from it:
 
@@ -58,10 +58,10 @@ class SevenZip < BBLib::CliChef::Cookbook
   # There are multiple ways to populate a Cookbook with Ingredients.
   # The next section discusses these methods.
   def setup_ingredients
+    # Manually construct and Ingredient and add it to the Cabinet
     @cabinet.add_ingredient( BBLib::CliChef::Ingredient.new(:extract, flag:'e'))
 
-    # OR add using TSV
-
+    # OR add using TSV loader
     tsv = %"name	description	flag	default	allowed_values	aliases	spacer	encapsulator
 add	Adds files to archive.	a	nil	nil	a
 extract	Extracts files from an archive to the current directory or to the output directory.	e	nil	nil	e
@@ -106,23 +106,35 @@ extract_full_paths	Extracts files from an archive with their full paths in the c
 end
 ```
 
-#### Adding Ingredients to __setup_ingredients__
+#### Adding Ingredients to _setup_ingredients_
+
 
 There are a couple of ways to add ingredients to a cookbook during initialization within the _setup_ingredients_ method. Both are shown above in the sample code for a 7Zip wrapper.
 
-1 Add Ingredient to @cabinet
+
+*1 Add Ingredient to @cabinet*
   As shown above, an Ingredient object can be created and passed into the _add_ingredient_ method of @cabinet.
-2 Parse From Separated Values
+
+
+*2 Parse From Separated Values*
   For additional convenience, the Cabinet class can parse text such as tsv or csv to generate Ingredients quickly. This allows you to setup the CLI arguments in an application such as excel and have the Cabinet parse them into Ingredients. The SV must include headers as the first row and must include at least the header 'name'. The following list may also be specified in the SV:
 
-- name (required) - A string name. Use lower case and avoid spaces. Any spaces will be replaced with underscores. Symbols are stripped as well, so stick to alpha-numeric chars.
-- description - A full text description of the ingredient. If using a csv, avoid commas. It is recommended that you use the TSV parser instead, so commas are allowed.
-- default - Specifies what the default value of the ingredient is. This value must conform to the allowed_values field options.
-- flag - The flag for this ingredient (EX: '-c', 't', '--help').
-- spacer - What should be used to separate the flag and the value. The default is no space. Commonly this may be a single white space (' ').
-- encapsulator - Used to encapsulate a value. Commonly left nil or as a quote or single quote. For instance, a file path that could have spaces may need this to be set to '"'.
-- aliases - A pipe ('|') separated list of aliases for this ingredient. Avoid naming conflicts with other ingredients and their aliases.
-- allowed_values - A pipe separated list of allowed values for this ingredient. If values are strings, they need to be encapsulated by single quotes (such as 'zip'). Anything left without quotes will be treated literally in Ruby. So String, would mean any String object is allowed.
+
+- *name* (required) - A string name. Use lower case and avoid spaces. Any spaces will be replaced with underscores. Symbols are stripped as well, so stick to alpha-numeric chars.
+
+- *description* - A full text description of the ingredient. If using a csv, avoid commas. It is recommended that you use the TSV parser instead, so commas are allowed.
+
+- *default* - Specifies what the default value of the ingredient is. This value must conform to the allowed_values field options.
+
+- *flag* - The flag for this ingredient (EX: '-c', 't', '--help').
+
+- *spacer* - What should be used to separate the flag and the value. The default is no space. Commonly this may be a single white space (' ').
+
+- *encapsulator* - Used to encapsulate a value. Commonly left nil or as a quote or single quote. For instance, a file path that could have spaces may need this to be set to '"'.
+
+- *aliases* - A pipe ('|') separated list of aliases for this ingredient. Avoid naming conflicts with other ingredients and their aliases.
+
+- *allowed_values* - A pipe separated list of allowed values for this ingredient. If values are strings, they need to be encapsulated by single quotes (such as 'zip'). Anything left without quotes will be treated literally in Ruby. So String, would mean any String object is allowed.
 
 ## Development
 
