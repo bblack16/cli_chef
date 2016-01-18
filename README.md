@@ -149,7 +149,7 @@ Ingredients (arguments) are components of a full command to be executed by the C
 
 - *flag*: The flag for this Ingredient. Not all arguments have a flag, so this should be nil if it is one of those. This should be a string. (EX: '-c', 't', '--help').
 
-- *spacer*: The spacer is used to divide the flag and the value. By default it is nil, which means there is no space. So an Ingredient with a '-c' flag and a 'Text' value would be constructed as '-cTest'. This may typically be a space (' '). The same example with the spacer set to ' ' would construct like '-c Test'.
+- *spacer*: The spacer is used to divide the flag and the value. By default it is ' ', which means there is a space. So an Ingredient with a '-c' flag and a 'Text' value would be constructed as '-c Test'. If, instead, you want there to be no space, spacer can be set to nil or ''. This would construct like '-cTest'.
 
 - *encapsulator*: Used to encapsulate a value. Commonly left nil or as a quote or single quote. For instance, a file path that could have spaces may need this to be set to '"'. The toggle encap_space_values controls whether or not the encapsulator is used. If encap_space_values is set to true, the encapsulator will only be added to the value if it contains a space. This is the default behavior.
 
@@ -159,6 +159,94 @@ Ingredients (arguments) are components of a full command to be executed by the C
 
 - *allowed_values*: An array of allowed values to this Ingredient. These can be objects such as specific strings or numbers or classes or regular expressions. If the value equates to true against the '===' with any of these allowed values it is permitted.
 
+```ruby
+ing = BBLib::CliChef::Ingredient.new :archive_type, flag: '-t', default: 'zip', description: 'Sets the type of archive.', allowed_values: ['zip', '7z', 'tar', 'gz'], aliases: [:type]
+
+ing.value = 'tar'
+puts ing.to_s
+#=> '-t tar'
+
+ing.spacer = nil
+puts ing.to_s
+#=> '-ttar'
+```
+
+### Cabinets
+
+Cabinets store all the possible ingredients that a Cookbook (CLI) has. Most interaction with it is handled by the Cookbook class. Methods of note are _add_ingredient(ingredient)_ which allows new ingredients to be added. If any ingredient with the same name already exists, it is overwritten by the new one. _remove_ingredient(name)_ allows ingredients to be removed from the cabinet.
+
+The Cookbook extends some convenience methods to retrieve information from the cabinet such as:
+
+- *ingredient_list*: Displays a list of all available ingredient names.
+- *ingredient_options(name)*: Returns the allowed values for the named ingredient.
+- *ingredient(name)*: Returns the ingredient with _name_ from the cabinet.
+- *add_ingredient(ingredient)*: Adds an ingredient to the cabinet. Must be an Ingredient object.
+- *remove_ingredient(name)*: Removes the named ingredient from the cabinet if it exists.
+
+### Recipes && Recipe Books
+
+Recipes are collections of ingredients with default values. Four things make up a recipe:
+
+- *name*: The name of the recipe. Must be a symbol and needs to be unique across all other recipes in the Cookbook.
+- *description*: A brief description of what the recipe is for and how to use it.
+- *ingredients*: A hash of ingredient names and values for them. If the value is nil or false, it will not be used within the _mix_ method, and thus, not included in the final cmd. The order of this hash is the order in which the ingredients will be added to the cmd.
+- *required_input*: An Array of ingredient names that must be passed in to the _mix_ method's input hash along with values. When _mix_ is called, if any of these are missing from the input hash, an error is raised listing the missing ingredients. If the name argument is not already in the ingredients list it is added with nil as its value.
+
+__mix__
+
+The _mix_ method is used to build a cmd hash from the recipe that can be used in the _cook_ or _preheat_ methods of a Cookbook. An input hash needs to be passed in with key:value pairs for any ingredient values that need to be set. If an ingredient is in the @required_input Array it MUST be passed in the input hash. Values in the input hash override all values in the @ingredients hash. For an example, see below. This method is used behind the scenes and will handled by the Cookbook.
+
+```ruby
+rec = BBLib::CliChef::Recipe.new :extract_archive
+rec.description = 'Extracts a single archive to the same directory as the archive file. Use the :archive ingredient to set the path to the archive to extract'
+rec.add_ingredient :extract, true
+rec.add_ingredient :archive, nil
+rec.add_required_input :archive
+
+puts rec.mix({archive: 'D:/test/archive.zip'})
+#=> {:extract=>true, :archive=>"D:/test/archive.zip"}
+```
+
+#### Recipe Book
+
+Each cookbook has a recipe book. They are collections of recipes that can be referenced and used by the cookbook. Interaction with the book is handled by the Cookbook through the methods below:
+
+- *recipe_list*: Provides a list of all recipes in the recipe book.
+- *add_recipe(recipe)*: Adds a recipe to the book. Must be a Recipe object.
+- *remove_recipe(name)*: Removes the named recipe from the book if it exists.
+
+### Putting it to use
+
+Once a Cookbook has been created and provided with ingredients and recipes, it can be used.
+
+#### Using the __run__ & __prepare__ methods
+
+The cookbook has run method which is used to execute a cmd on the shell. Only one argument is needed; ingredients. Ingredients is a key:value pair, where key is the exact name of an ingredient in the cabinet and value is the value to pass to it. The value may also be an Array. If it is, all items in the Array are added to the cmd including the corresponding flags if they exist. The response for the cmd as well as information on the exit code is returned in a hash. To retrieve only the stdout response, set the name variable _detailed_ to false.
+
+Prepare takes the exact same arguments, but returns a full constructed cmd line argument rather than running it.
+
+```ruby
+# Using the example 7zip wrapper included in the wrappers section
+sz = BBLib::CliChef::SevenZip.new
+ingredients = {test:true, archive:'D:/test/test.7z'}
+puts sz.run(ingredients)
+#=>{:response=>"\n7-Zip [64] 15.06 beta : Copyright (c) 1999-2015 Igor Pavlov : 2015-08-09\n\nScanning the drive for archives:\n1 file, 1357418 bytes (1326 KiB)\n\nTesting archive: D:\\test\\test.7z\n--\nPath = D:\\test\\test.7z\nType = 7z\nPhysical Size = 1357418\nHeaders Size = 1724\nMethod = LZMA2:6m LZMA:48k BCJ\nSolid = +\nBlocks = 3\n\nEverything is Ok\n\nFolders: 4\nFiles: 110\nSize:       4895076\nCompressed: 1357418\n", :exit=>{:code=>0, :desc=>"No error"}}
+
+puts sz.prepare(ingredients)
+#=> "C:/Program Files/7-Zip/7z.exe" t D:/test/test.7z
+```
+
+#### Using the __cook__ & __preheat__ methods
+
+Cook and preheat are similar to run and prepare, except instead, they use recipes to construct the cmds. A similar input hash (similar to what run needs) is required as the second argument to both, but a recipe name is also needed first. The ingredient hash is passed to the _mix_ method of the recipe which is then passed to either the run or prepare method.
+
+```ruby
+puts sz.preheat(:extract, {archive:'D:/test/test.7z'})
+#=> '"C:/Program Files/7-Zip/7z.exe" x -y D:/test/test.7z'
+
+puts sz.cook(:extract, {archive:'D:/test/test.7z'})
+#=> {:response=>"\n7-Zip [64] 15.06 beta : Copyright (c) 1999-2015 Igor Pavlov : 2015-08-09\n\nScanning the drive for archives:\n1 file, 1357418 bytes (1326 KiB)\n\nExtracting archive: D:\\test\\test.7z\n--\nPath = D:\\test\\test.7z\nType = 7z\nPhysical Size = 1357418\nHeaders Size = 1724\nMethod = LZMA2:6m LZMA:48k BCJ\nSolid = +\nBlocks = 3\n\nEverything is Ok\n\nFolders: 4\nFiles: 110\nSize:       4895076\nCompressed: 1357418\n", :exit=>{:code=>0, :desc=>"No error"}}
+```
 
 ## Development
 

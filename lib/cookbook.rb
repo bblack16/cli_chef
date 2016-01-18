@@ -57,8 +57,20 @@ module BBLib
         @cabinet.ingredients[name]
       end
 
+      def add_ingredient ingredient
+        @cabinet.add_ingredient(ingredient)
+      end
+
+      def remove_ingredient name
+        @cabinet.remove_ingredient(name)
+      end
+
       def add_recipe r
         @recipe_book.add_recipe r
+      end
+
+      def remove_recipe name
+        @recipe_book.remove_recipe name
       end
 
       def cook recipe, ingredients = {}
@@ -71,7 +83,7 @@ module BBLib
         prepare(@recipe_book[recipe.to_sym].mix(ingredients))
       end
 
-      def recipes
+      def recipe_list
         @recipe_book.recipes.keys
       end
 

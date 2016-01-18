@@ -1,7 +1,7 @@
 module BBLib
 
   module CliChef
-    
+
     class Ingredient
       attr_reader :name, :description, :flag, :value, :spacer, :encapsulator, :aliases
       attr_reader :allowed_values, :default, :encap_space_values
@@ -26,7 +26,7 @@ module BBLib
       end
 
       def name= n
-        @name = n.gsub('_',' ').drop_symbols.gsub(' ','_').downcase.to_sym
+        @name = n.to_s.gsub('_',' ').drop_symbols.gsub(' ','_').downcase.to_sym
       end
 
       def description= d
