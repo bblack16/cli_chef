@@ -9,8 +9,8 @@ module BBLib
       end
 
       def info file, full:false
-        puts prepare full:false, file:file
-        i = run(full:full, file:file)[:response]
+        puts prepare full:full, file:file
+        i = run(file:file, full:full)[:response]
         data = {}
         i.split("\n\n").each do |s|
           lines = s.split("\n")
@@ -46,12 +46,12 @@ module BBLib
         end
 
         def setup_ingredients
-          tsv = %"name	description	flag	default	allowed_values	aliases
+          tsv = %"name	description	flag	default	allowed_values	aliases	encapsulator
 help	Display the CLI help.	--help	nil	nil
 full	Full information Display (all internal tags)	-f	nil	nil
 output_html	Full information Display with HTML tags	--Output=HTML	nil	nil	html
 output_xml	Full information Display with XML tags	--Output=XML	nil	nil	xml
-file	The file to get tags out of		nil	String
+file	The file to get tags out of		nil	String		\"
 "
           @cabinet.from_tsv tsv
         end
