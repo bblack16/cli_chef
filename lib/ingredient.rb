@@ -21,7 +21,7 @@ module BBLib
       end
 
       def to_s
-        enc = !@encap_space_values || @value.to_s.include?(' ') ? @encapsulator : nil
+        enc = @encap_space_values && @value.to_s.include?(' ') ? @encapsulator : nil
         "#{@flag}#{@flag && @flag != '' ? @spacer : nil}#{enc}#{@value}#{enc}"
       end
 
