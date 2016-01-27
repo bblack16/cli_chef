@@ -13,14 +13,10 @@ module BBLib
         init name, description, path
       end
 
-      def run ingredients, detailed: true
+      def run *ingredients
         valid_check
-        @result = ({response: `#{prepare(ingredients)}`, exit: {code: $?.exitstatus, desc: @exit_codes[$?.exitstatus]}})
-        if detailed
-          return @result
-        else
-          return @result[:response]
-        end
+        @result = ({response: `#{prepare(ingredients.find{|i| Hash === i})}`, exit: {code: $?.exitstatus, desc: @exit_codes[$?.exitstatus]}})
+        return @result
       end
 
       def prepare ingredients
