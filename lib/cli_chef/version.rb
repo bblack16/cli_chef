@@ -1,3 +1,3 @@
-module CliChef
-  VERSION = "0.1.0"
+module CLIChef
+  VERSION = "0.1.1"
 end

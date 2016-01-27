@@ -5,7 +5,7 @@ require_relative 'wrappers/7zip'
 
 module BBLib
 
-  module CliChef
+  module CLIChef
 
   end
 

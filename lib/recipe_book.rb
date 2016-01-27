@@ -2,7 +2,7 @@ require_relative 'recipe'
 
 module BBLib
 
-  module CliChef
+  module CLIChef
 
     class RecipeBook
       attr_reader :recipes
@@ -12,7 +12,7 @@ module BBLib
       end
 
       def add_recipe recipe
-        raise "Invalid class passed for recipe (#{recipe.class}). Must be a BBLib::CliChef::Recipe." unless recipe.is_a? BBLib::CliChef::Recipe
+        raise "Invalid class passed for recipe (#{recipe.class}). Must be a BBLib::CLIChef::Recipe." unless recipe.is_a? BBLib::CLIChef::Recipe
         @recipes[recipe.name] = recipe
       end
 

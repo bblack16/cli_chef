@@ -1,8 +1,8 @@
 module BBLib
 
-  module CliChef
+  module CLIChef
 
-    class SevenZip < BBLib::CliChef::Cookbook
+    class SevenZip < BBLib::CLIChef::Cookbook
 
       def initialize path: nil
         self.init '7Zip', '7-Zip is a file archiver with a high compression ratio.', path
@@ -104,19 +104,19 @@ module BBLib
         end
 
         def setup_recipes
-          @recipe_book.add_recipe BBLib::CliChef::Recipe.new 'list', ingredients: ({list:true, archive:nil, show_technical: true, include_archives: nil, disable_parsing: nil, exclude_archives: nil, include: nil, password:nil, recurse:nil, type:nil, exclude:nil}), required_input: [:archive]
+          @recipe_book.add_recipe BBLib::CLIChef::Recipe.new 'list', ingredients: ({list:true, archive:nil, show_technical: true, include_archives: nil, disable_parsing: nil, exclude_archives: nil, include: nil, password:nil, recurse:nil, type:nil, exclude:nil}), required_input: [:archive]
           @recipe_book[:list].description = 'Gets a list of all files within an archive. The path to the archive or a wildcard path must be provided. By default this recipe shows technical information using the slt ingredient.'
-          @recipe_book.add_recipe BBLib::CliChef::Recipe.new 'add', ingredients: ({add:true, type:'7z', include:nil, exclude:nil, recurse:nil, volumes:nil, working_dir:nil, password:nil, method:nil}), required_input: [:file, :output]
+          @recipe_book.add_recipe BBLib::CLIChef::Recipe.new 'add', ingredients: ({add:true, type:'7z', include:nil, exclude:nil, recurse:nil, volumes:nil, working_dir:nil, password:nil, method:nil}), required_input: [:file, :output]
           @recipe_book[:add].description = 'Adds a file to the specified archive. If the archive does not exist it is created. Both the input file and output archive are required arguments and must be valid file paths. The :type ingredient can be used to toggle what type of archive is created. By default it is a 7z.'
-          @recipe_book.add_recipe BBLib::CliChef::Recipe.new 'extract', ingredients: ({extract_full_paths:true, extract:false, output:nil, type:nil, include:nil, exclude:nil, recurse:nil, include_archives:nil, exclude_archives:nil, password:nil, overwrite_mode:nil, stdout:false, assume_yes:true}), required_input: [:archive]
+          @recipe_book.add_recipe BBLib::CLIChef::Recipe.new 'extract', ingredients: ({extract_full_paths:true, extract:false, output:nil, type:nil, include:nil, exclude:nil, recurse:nil, include_archives:nil, exclude_archives:nil, password:nil, overwrite_mode:nil, stdout:false, assume_yes:true}), required_input: [:archive]
           @recipe_book[:extract].description = 'Extracts files from an archive. The archive must be specified and must be a valid path. By default everything will be extracted into the directory of the archive. Use the :output ingredient to toggle a different location to extract files. By default full paths mode is used. For standard extract pass {extract:true, extract_full_paths:false} as ingredients.'
-          @recipe_book.add_recipe BBLib::CliChef::Recipe.new :benchmark, ingredients:({benchmark:true})
+          @recipe_book.add_recipe BBLib::CLIChef::Recipe.new :benchmark, ingredients:({benchmark:true})
           @recipe_book[:benchmark].description = 'Measures speed of the CPU and checks RAM for errors. No arguments required'
-          @recipe_book.add_recipe BBLib::CliChef::Recipe.new :delete, ingredients:({delete:true, archive:nil, file:nil, include:nil, method:nil, password:nil, update_switch:nil, working_dir:nil, exclude:nil}), required_input: [:archive, :file]
+          @recipe_book.add_recipe BBLib::CLIChef::Recipe.new :delete, ingredients:({delete:true, archive:nil, file:nil, include:nil, method:nil, password:nil, update_switch:nil, working_dir:nil, exclude:nil}), required_input: [:archive, :file]
           @recipe_book[:delete].description = 'Deletes files from an archive. Use :archive to specify the path to the archive, and :file to specify either the file name or wildcarded file name(s) (*) to remove from the archive.'
-          @recipe_book.add_recipe BBLib::CliChef::Recipe.new :test, ingredients:({test:true, archive:nil, file:nil, include:nil, include_archives:nil, password:nil, recurse:nil, disable_parsing:nil, exclude:nil, exclude_archives:nil}), required_input: [:archive]
+          @recipe_book.add_recipe BBLib::CLIChef::Recipe.new :test, ingredients:({test:true, archive:nil, file:nil, include:nil, include_archives:nil, password:nil, recurse:nil, disable_parsing:nil, exclude:nil, exclude_archives:nil}), required_input: [:archive]
           @recipe_book[:test].description = 'Tests an archive. Use :archive to specify the archive file. You may also test only certain files within the archive using the :file ingredient.'
-          @recipe_book.add_recipe BBLib::CliChef::Recipe.new :update, ingredients:({update:true, archive:nil, file:nil, include:nil, password:nil, recurse:nil, stdout:nil, exclude:nil, stdin:nil, working_dir:nil, create_sfx:nil, compress_shared_files:nil, type:nil, update_switch:nil}), required_input: [:archive]
+          @recipe_book.add_recipe BBLib::CLIChef::Recipe.new :update, ingredients:({update:true, archive:nil, file:nil, include:nil, password:nil, recurse:nil, stdout:nil, exclude:nil, stdin:nil, working_dir:nil, create_sfx:nil, compress_shared_files:nil, type:nil, update_switch:nil}), required_input: [:archive]
           @recipe_book[:update].description = 'Update older files in the archive and add files that are not already in the archive. Use :archive to specify the archive to update and :file to control what file(s) is updated.'
         end
 

@@ -3,7 +3,7 @@ require_relative 'recipe_book'
 
 module BBLib
 
-  module CliChef
+  module CLIChef
 
     class Cookbook
       attr_reader :name, :description, :path, :valid, :result
@@ -120,8 +120,8 @@ module BBLib
 
         def init name, description, path
           @exit_codes, @default_locations = {}, []
-          @recipe_book = BBLib::CliChef::RecipeBook.new
-          @cabinet = BBLib::CliChef::Cabinet.new
+          @recipe_book = BBLib::CLIChef::RecipeBook.new
+          @cabinet = BBLib::CLIChef::Cabinet.new
           self.name = name
           self.description = description
           self.setup_ingredients

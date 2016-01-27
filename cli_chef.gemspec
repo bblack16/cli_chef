@@ -5,12 +5,12 @@ require 'cli_chef/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "cli_chef"
-  spec.version       = CliChef::VERSION
+  spec.version       = CLIChef::VERSION
   spec.authors       = ["Brandon Black"]
   spec.email         = ["d2sm10@hotmail.com"]
 
   spec.summary       = %q{CLI Chef is a simple, yet powerful CLI wrapper framework for Ruby.}
-  spec.description   = %q{CliChef is an extension of the BBLib for Ruby. It was created to provide a simple and flexible CLI wrapper framework.}
+  spec.description   = %q{CLI Chef is an extension of the BBLib for Ruby. It was created to provide a simple and flexible CLI wrapper framework.}
   spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 

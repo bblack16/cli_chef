@@ -1,6 +1,6 @@
 module BBLib
 
-  module CliChef
+  module CLIChef
 
     class Ingredient
       attr_reader :name, :description, :flag, :value, :spacer, :encapsulator, :aliases

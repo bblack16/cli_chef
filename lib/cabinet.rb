@@ -2,7 +2,7 @@ require_relative 'ingredient'
 
 module BBLib
 
-  module CliChef
+  module CLIChef
 
     class Cabinet
       attr_reader :ingredients
@@ -57,7 +57,7 @@ module BBLib
         headers = lines.first.split(delim).map{ |m| m.downcase.to_sym }
         lines[1..-1].each do |l|
           h = headers.zip(l.split("\t")).to_h
-          add_ingredient(BBLib::CliChef::Ingredient.new h[:name], description:h[:description], default:(h[:default] == 'nil' ? nil : h[:default]), flag:(h[:flag] == 'nil' ? nil : h[:flag]), value:h[:value], spacer:h[:spacer], encapsulator:h[:encapsulator], aliases:h[:aliases].to_s.split('|'), allowed_values:h.include?(:allowed_values) ? h[:allowed_values].to_s.split('|').map{ |a| eval(a) } : Object)
+          add_ingredient(BBLib::CLIChef::Ingredient.new h[:name], description:h[:description], default:(h[:default] == 'nil' ? nil : h[:default]), flag:(h[:flag] == 'nil' ? nil : h[:flag]), value:h[:value], spacer:h[:spacer], encapsulator:h[:encapsulator], aliases:h[:aliases].to_s.split('|'), allowed_values:h.include?(:allowed_values) ? h[:allowed_values].to_s.split('|').map{ |a| eval(a) } : Object)
         end
       end
 

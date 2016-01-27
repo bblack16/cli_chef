@@ -1,4 +1,4 @@
-# CliChef
+# CLIChef
 
 CLI Chef is a simple command line interface wrapper for Ruby. It is made to make writing wrappers an easy and flexible process.
 
@@ -44,7 +44,7 @@ Cookbooks are the core class of CLI Chef. It is meant to be an abstract class fr
 To create a new cookbook you simple create a new class that inherits from it:
 
 ```ruby
-class SevenZip < BBLib::CliChef::Cookbook
+class SevenZip < BBLib::CLIChef::Cookbook
   # Code goes here
 end
 ```
@@ -53,7 +53,7 @@ end
 There are a few setup methods that you need to override as well as a few that can be, but are optional.
 
 ```ruby
-class SevenZip < BBLib::CliChef::Cookbook
+class SevenZip < BBLib::CLIChef::Cookbook
 
   protected
 
@@ -66,7 +66,7 @@ class SevenZip < BBLib::CliChef::Cookbook
   # The next section discusses these methods.
   def setup_ingredients
     # Manually construct and Ingredient and add it to the Cabinet
-    @cabinet.add_ingredient( BBLib::CliChef::Ingredient.new(:extract, flag:'e'))
+    @cabinet.add_ingredient( BBLib::CLIChef::Ingredient.new(:extract, flag:'e'))
 
     # OR add using TSV loader
     tsv = %"name	description	flag	default	allowed_values	aliases	spacer	encapsulator
@@ -107,7 +107,7 @@ extract_full_paths	Extracts files from an archive with their full paths in the c
   # to be added to every instance of the wrapper. An easy way of adding recipes is shown below.
   # See the recipe section for more information on recipes.
   def setup_recipes
-    @recipe_book.add_recipe BBLib::CliChef::Recipe.new 'add', ingredients: ({add:true, type:'7z', include:nil, exclude:nil, recurse:nil, volumes:nil, working_dir:nil, password:nil, method:nil}), required_input: [:file, :output]
+    @recipe_book.add_recipe BBLib::CLIChef::Recipe.new 'add', ingredients: ({add:true, type:'7z', include:nil, exclude:nil, recurse:nil, volumes:nil, working_dir:nil, password:nil, method:nil}), required_input: [:file, :output]
     @recipe_book[:add].description = 'Adds a file to the specified archive. If the archive does not exist it is created. Both the input file and output archive are required arguments and must be valid file paths. The :type ingredient can be used to toggle what type of archive is created. By default it is a 7z.'
   end
 end
@@ -167,7 +167,7 @@ Ingredients (arguments) are components of a full command to be executed by the C
 - *allowed_values*: An array of allowed values to this Ingredient. These can be objects such as specific strings or numbers or classes or regular expressions. If the value equates to true against the '===' with any of these allowed values it is permitted.
 
 ```ruby
-ing = BBLib::CliChef::Ingredient.new :archive_type, flag: '-t', default: 'zip', description: 'Sets the type of archive.', allowed_values: ['zip', '7z', 'tar', 'gz'], aliases: [:type]
+ing = BBLib::CLIChef::Ingredient.new :archive_type, flag: '-t', default: 'zip', description: 'Sets the type of archive.', allowed_values: ['zip', '7z', 'tar', 'gz'], aliases: [:type]
 
 ing.value = 'tar'
 puts ing.to_s
@@ -204,7 +204,7 @@ __mix__
 The _mix_ method is used to build a cmd hash from the recipe that can be used in the _cook_ or _preheat_ methods of a Cookbook. An input hash needs to be passed in with key:value pairs for any ingredient values that need to be set. If an ingredient is in the @required_input Array it MUST be passed in the input hash. Values in the input hash override all values in the @ingredients hash. For an example, see below. This method is used behind the scenes and will handled by the Cookbook.
 
 ```ruby
-rec = BBLib::CliChef::Recipe.new :extract_archive
+rec = BBLib::CLIChef::Recipe.new :extract_archive
 rec.description = 'Extracts a single archive to the same directory as the archive file. Use the :archive ingredient to set the path to the archive to extract'
 rec.add_ingredient :extract, true
 rec.add_ingredient :archive, nil
@@ -234,7 +234,7 @@ Prepare takes the exact same arguments, but returns a full constructed cmd line 
 
 ```ruby
 # Using the example 7zip wrapper included in the wrappers section
-sz = BBLib::CliChef::SevenZip.new
+sz = BBLib::CLIChef::SevenZip.new
 ingredients = {test:true, archive:'D:/test/test.7z'}
 puts sz.run(ingredients)
 #=>{:response=>"\n7-Zip [64] 15.06 beta : Copyright (c) 1999-2015 Igor Pavlov : 2015-08-09\n\nScanning the drive for archives:\n1 file, 1357418 bytes (1326 KiB)\n\nTesting archive: D:\\test\\test.7z\n--\nPath = D:\\test\\test.7z\nType = 7z\nPhysical Size = 1357418\nHeaders Size = 1724\nMethod = LZMA2:6m LZMA:48k BCJ\nSolid = +\nBlocks = 3\n\nEverything is Ok\n\nFolders: 4\nFiles: 110\nSize:       4895076\nCompressed: 1357418\n", :exit=>{:code=>0, :desc=>"No error"}}
@@ -257,7 +257,7 @@ puts sz.cook(:extract, {archive:'D:/test/test.7z'})
 
 ### The Menu
 
-Cookbook has a method called _men_ which prints out a list of all recipes with descriptions and details as well as all ingredients and their descriptions and details. It is constructed to be somewhat of a --help page for the wrapper.
+Cookbook has a method called _menu_ which prints out a list of all recipes with descriptions and details as well as all ingredients and their descriptions and details. It is constructed to be somewhat of a --help page for the wrapper.
 
 ## Examples
 
