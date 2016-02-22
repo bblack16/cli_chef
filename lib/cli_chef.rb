@@ -4,10 +4,6 @@ require_relative 'wrappers/7zip'
 require_relative 'wrappers/media_info'
 require 'bblib' if !defined?(BBLib::VERSION)
 
-module BBLib
-
-  module CLIChef
-
-  end
+module CLIChef
 
 end
