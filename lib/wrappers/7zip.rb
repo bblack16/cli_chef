@@ -17,7 +17,7 @@ class SevenZip < CLIChef::Cookbook
   def add file, output, type:nil, include:nil, exclude:nil, recurse:nil, volumes:nil, working_dir:nil, password:nil, method:nil
     good = true
     [file].flatten.each do |f|
-      cook(:add, {file:file, output:output, type:type, include:include, exclude:exclude, recurse:recurse, volumes:volumes, working_dir:working_dir, password:password, method:method, file:[output, file]})
+      cook(:add, {output:output, type:type, include:include, exclude:exclude, recurse:recurse, volumes:volumes, working_dir:working_dir, password:password, method:method, file:[output, file]})
       if !@result[:response].include? 'Everything is Ok' then good = false end
     end
     good
@@ -150,5 +150,5 @@ show_technical_information	Sets technical mode for l (List) command.	-slt	nil	ni
 "
       @cabinet.from_tsv tsv
     end
-    
+
 end
