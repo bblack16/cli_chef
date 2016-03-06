@@ -62,3 +62,4 @@ module CLIChef
   end
 
 end
+

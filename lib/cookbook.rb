@@ -11,6 +11,7 @@ module CLIChef
       init name, description, path
     end
 
+<<<<<<< HEAD
     def run *ingredients
       valid_check
       @result = ({response: `#{prepare(ingredients.find{|i| Hash === i})}`, exit: {code: $?.exitstatus, desc: @exit_codes[$?.exitstatus]}})
@@ -18,6 +19,15 @@ module CLIChef
     end
 
     def prepare ingredients
+=======
+    def run **ingredients
+      valid_check
+      @result = ({response: `#{prepare(ingredients)}`, exit: {code: $?.exitstatus, desc: @exit_codes[$?.exitstatus]}})
+      return @result
+    end
+
+    def prepare **ingredients
+>>>>>>> 896d203583c4558e650a861afc52a50df6c6c37e
       "#{get_path} #{@cabinet.ingredient_string(ingredients)}"
     end
 
@@ -67,12 +77,20 @@ module CLIChef
       @recipe_book.remove_recipe name
     end
 
+<<<<<<< HEAD
     def cook recipe, ingredients = {}
+=======
+    def cook recipe, **ingredients
+>>>>>>> 896d203583c4558e650a861afc52a50df6c6c37e
       return nil unless @recipe_book.include? recipe.to_sym
       run(@recipe_book[recipe.to_sym].mix(ingredients))
     end
 
+<<<<<<< HEAD
     def preheat recipe, ingredients = {}
+=======
+    def preheat recipe, **ingredients
+>>>>>>> 896d203583c4558e650a861afc52a50df6c6c37e
       return nil unless @recipe_book.include? recipe.to_sym
       prepare(@recipe_book[recipe.to_sym].mix(ingredients))
     end
@@ -132,6 +150,7 @@ module CLIChef
 
       def check_path
         @valid = File.exist? @path
+<<<<<<< HEAD
         if !@valid
           begin
             `#{@path}`
@@ -141,6 +160,9 @@ module CLIChef
           end
         end
         @valid
+=======
+        valid
+>>>>>>> 896d203583c4558e650a861afc52a50df6c6c37e
       end
 
       def get_path_from_defaults
@@ -153,7 +175,11 @@ module CLIChef
       end
 
       def valid_check
+<<<<<<< HEAD
         raise "This wrapper cannot be run because no valid path to the exe was found (#{@name}). Current path: '#{@path}'" unless @valid
+=======
+        raise "This wrapper cannot be run because no valid path to the exe was found (#{@name})." unless @valid
+>>>>>>> 896d203583c4558e650a861afc52a50df6c6c37e
       end
 
       def setup_ingredients
