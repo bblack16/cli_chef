@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-  module CLIChef
-=======
 module CLIChef
->>>>>>> 896d203583c4558e650a861afc52a50df6c6c37e
-
+  
   class Ingredient
     attr_reader :name, :description, :flag, :value, :spacer, :encapsulator, :aliases
     attr_reader :allowed_values, :default, :encap_space_values
@@ -95,4 +91,3 @@ module CLIChef
   end
 
 end
-
