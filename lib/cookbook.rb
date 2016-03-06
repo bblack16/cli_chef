@@ -134,7 +134,15 @@ module BBLib
 
         def check_path
           @valid = File.exist? @path
-          valid
+          if !@valid
+            begin
+              `#{@path}`
+              @valid = true
+            rescue
+              @valid = false
+            end
+          end
+          @valid
         end
 
         def get_path_from_defaults
@@ -147,7 +155,7 @@ module BBLib
         end
 
         def valid_check
-          raise "This wrapper cannot be run because no valid path to the exe was found (#{@name})." unless @valid
+          raise "This wrapper cannot be run because no valid path to the exe was found (#{@name}). Current path: '#{@path}'" unless @valid
         end
 
         def setup_ingredients
