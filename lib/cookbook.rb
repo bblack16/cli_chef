@@ -7,7 +7,6 @@ module CLIChef
     attr_valid_file :path, allow_nil: true
     attr_array_of String, :default_locations, default: []
     attr_array_of Ingredient, :ingredients
-    attr_array_of Recipe, :recipes
     attr_int :exit_code
     attr_reader :exit_codes, :result
 
