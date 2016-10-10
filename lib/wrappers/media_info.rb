@@ -35,7 +35,7 @@ class MediaInfo < CLIChef::Cookbook
 
       add_exit_codes(
         0 => 'No error',
-        1 =>	'Failure'
+        1 => 'Failure'
       )
 
       add_default_location(

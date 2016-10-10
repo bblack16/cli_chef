@@ -58,12 +58,12 @@ class SevenZip < CLIChef::Cookbook
       self.description = '7-Zip is a file archiver with a high compression ratio.'
 
       add_exit_codes(
-        0 => 'No error',
-        1 =>	'Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.',
-        2	=> 'Fatal error',
-        7	=> 'Command line error',
-        8	=> 'Not enough memory for operation',
-        255	=> 'User stopped the process'
+        0   => 'No error',
+        1   => 'Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.',
+        2   => 'Fatal error',
+        7   => 'Command line error',
+        8   => 'Not enough memory for operation',
+        255 => 'User stopped the process'
       )
 
       add_default_location(
