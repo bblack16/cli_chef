@@ -1,53 +1,64 @@
 class MediaInfo < CLIChef::Cookbook
 
-  def initialize path = nil
-    self.init 'MediaInfo', 'MediaInfo is a convenient unified display of the most relevant technical and tag data for video and audio files.', path
-  end
-
-  def info file, full:false
-    i = run(file:file, full:full)[:response]
-    data = {}
-    i.split("\n\n").each do |s|
-      lines = s.split("\n")
-      cat = lines.delete_at(0).to_s.strip.to_clean_sym
-      next unless cat.to_s != ''
-      data[cat] = Hash.new
-      lines.each do |l|
-        data[cat][l.split(':').first.to_clean_sym] = l.split(':')[1..-1].join(':').strip
-      end
-    end
-    data
-  end
-
   def help
-    run({help:nil})[:response]
+    run(help:nil)
+  end
+
+  def version
+    run(version:true).scan(/(?<= v)\d+\.\d+.*/).first
+  end
+
+  def info file, **args
+    args.delete(:non_blocking)
+    run({ file: file }.merge(args)).split("\n\n").map do |category|
+      lines = category.split("\n")
+      if lines.empty?
+        nil
+      else
+        name = lines.delete_at(0).strip.downcase.to_clean_sym
+        lines.map do |line|
+          line_split = line.split(':', 2)
+          [
+            "#{name == :general ? nil : "#{name}_"}#{line_split.first.strip.downcase}".to_clean_sym,
+            convert_value(line_split.last.strip)
+          ]
+        end
+      end
+    end.compact.flatten(1).to_h
   end
 
   protected
 
-    def setup_exit_codes
-      @exit_codes = {
+    def setup_defaults
+      self.name        = :media_info
+      self.description = 'MediaInfo is a convenient unified display of the most relevant technical and tag data for video and audio files.'
+
+      add_exit_codes(
         0 => 'No error',
         1 =>	'Failure'
-      }
+      )
+
+      add_default_location(
+        'C:/Program Files/MediaInfo/MediaInfo.exe',
+        'C:/Program Files(x86)/MediaInfo/MediaInfo.exe'
+      )
+
+      add_ingredient(
+        { name: :help, description: 'Display the CLI help.', flag: '--help', allowed_values: [nil], aliases: [:h] },
+        { name: :version, description: 'Display MediaInfo version and exit', flag: '--Version', allowed_values: [nil], aliases: [:v] },
+        { name: :full, description: 'Full information Display (all internal tags)', flag: '-f', allowed_values: [nil], aliases: [:verbose] },
+        { name: :output_html, description: 'Full information Display with HTML tags', flag: '--Output=HTML', allowed_values: [nil], aliases: [:html] },
+        { name: :output_xml, description: 'Full information Display with XML tags', flag: '--Output=XML', allowed_values: [nil], aliases: [:xml] },
+        { name: :file, description: 'The file to get tags out of', flag: '', allowed_values: [String], aliases: [:input] }
+      )
     end
 
-    def setup_default_locations
-      @default_locations = ['C:/Program Files/MediaInfo/MediaInfo.exe', 'C:/Program Files(x86)/MediaInfo/MediaInfo.exe', 'C:/7-Zip/7z.exe']
+    def convert_value value
+      if (value.to_i.to_s == value rescue false)
+        value.to_i
+      else
+        value
+      end
     end
 
-    def setup_recipes
-      # None currently
-    end
-
-    def setup_ingredients
-      tsv = %"name	description	flag	default	allowed_values	aliases	encapsulator
-help	Display the CLI help.	--help	nil	nil
-full	Full information Display (all internal tags)	-f	nil	nil
-output_html	Full information Display with HTML tags	--Output=HTML	nil	nil	html
-output_xml	Full information Display with XML tags	--Output=XML	nil	nil	xml
-file	The file to get tags out of		nil	String		\"
-"
-      @cabinet.from_tsv tsv
-    end
 end
