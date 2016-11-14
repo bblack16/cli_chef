@@ -5,5 +5,4 @@ require_relative 'cookbook'
 require_relative 'wrappers/_wrappers'
 
 module CLIChef
-
 end

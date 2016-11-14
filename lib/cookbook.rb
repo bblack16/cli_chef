@@ -1,7 +1,7 @@
+# frozen_string_literal: true
 require_relative 'ingredient'
 
 module CLIChef
-
   class Cookbook < BBLib::LazyClass
     attr_string :name, :description
     attr_valid_file :path, allow_nil: true
@@ -10,11 +10,11 @@ module CLIChef
     attr_int :exit_code
     attr_reader :exit_codes, :result
 
-    def run **args, &block
+    def run(**args, &block)
       if args.delete(:non_blocking)
-        @thread = Thread.new {
+        @thread = Thread.new do
           run_cmd(args, &block)
-        }
+        end
       else
         run_cmd(args, &block)
       end
@@ -24,9 +24,9 @@ module CLIChef
       @exit_codes[@exit_code]
     end
 
-    def prepare **args
+    def prepare(**args)
       arguments = args.map do |k, v|
-        if ingredient = @ingredients.find{ |i| i.name == k || i.aliases.include?(k) }
+        if ingredient = @ingredients.find { |i| i.name == k || i.aliases.include?(k) }
           ingredient.value = v
           ingredient.to_s
         else
@@ -37,7 +37,7 @@ module CLIChef
     end
 
     def menu
-      menu = %"
+      menu = %(
       ▄████████  ▄█        ▄█        ▄████████    ▄█    █▄       ▄████████    ▄████████
      ███    ███ ███       ███       ███    ███   ███    ███     ███    ███   ███    ███
      ███    █▀  ███       ███▌      ███    █▀    ███    ███     ███    █▀    ███    █▀
@@ -46,12 +46,12 @@ module CLIChef
      ███    █▄  ███       ███       ███    █▄    ███    ███     ███    █▄    ███
      ███    ███ ███▌    ▄ ███       ███    ███   ███    ███     ███    ███   ███
      ████████▀  █████▄▄██ █▀        ████████▀    ███    █▀      ██████████   ███
-                ▀" +
-      "\n\t#{@name} - #{@description}\n\t" + '-' * 50
+                ▀) \
+             "\n\t#{@name} - #{@description}\n\t" + '-' * 50
       @ingredients.each do |ingredient|
-        menu += "\n\t\t#{ingredient.name} - #{ingredient.description}" +
-                "\n\t\t\tFlag: #{ingredient.flag}" +
-                "\n\t\t\tAllowed Values: #{ingredient.allowed_values.map{ |v| v.nil? ? 'nil' : v.to_s }.join(', ')}" +
+        menu += "\n\t\t#{ingredient.name} - #{ingredient.description}" \
+                "\n\t\t\tFlag: #{ingredient.flag}" \
+                "\n\t\t\tAllowed Values: #{ingredient.allowed_values.map { |v| v.nil? ? 'nil' : v.to_s }.join(', ')}" \
                 "\n\t\t\tAliases: #{ingredient.aliases.map(&:to_s).join(', ')}"
       end
       menu
@@ -67,75 +67,73 @@ module CLIChef
 
     protected
 
-      def lazy_setup
-        @exit_codes = Hash.new
-        @ingredients = Array.new
-        @result = nil
-        setup_defaults
-        check_default_paths
-      end
+    def lazy_setup
+      @exit_codes = {}
+      @ingredients = []
+      @result = nil
+      setup_defaults
+      check_default_paths
+    end
 
-      def setup_defaults
-        # Reimplement this in child class
-      end
+    def setup_defaults
+      # Reimplement this in child class
+    end
 
-      def process_line line, stream
-        # This method is used to determine what to do when a cmd generates
-        # stdout or stderr. Messages will be passed in line by line
-        # puts line
-      end
+    def process_line(line, stream)
+      # This method is used to determine what to do when a cmd generates
+      # stdout or stderr. Messages will be passed in line by line
+      # puts line
+    end
 
-      def add_ingredient *ingredients
-        ingredients.each do |ingredient|
-          ingredient = Ingredient.new(ingredient) if ingredient.is_a?(Hash)
-          raise TypeError, "Invalid object type passed as Ingredient: #{ingredient.class}" unless ingredient.is_a?(Ingredient)
-          @ingredients.push(ingredient)
-        end
+    def add_ingredient(*ingredients)
+      ingredients.each do |ingredient|
+        ingredient = Ingredient.new(ingredient) if ingredient.is_a?(Hash)
+        raise TypeError, "Invalid object type passed as Ingredient: #{ingredient.class}" unless ingredient.is_a?(Ingredient)
+        @ingredients.push(ingredient)
       end
+    end
 
-      def add_default_location *paths
-        @default_locations = (@default_locations + paths).uniq
+    def add_default_location(*paths)
+      @default_locations = (@default_locations + paths).uniq
+    end
+
+    def check_default_paths
+      if found = @default_locations.find { |path| File.exist?(path) }
+        self.path = found
       end
+    end
 
-      def check_default_paths
-        if found = @default_locations.find{ |path| File.exists?(path) }
-          self.path = found
-        end
+    def add_exit_codes(hash)
+      hash.each do |code, description|
+        @exit_codes[code] = description
       end
+    end
 
-      def add_exit_codes hash
-        hash.each do |code, description|
-          @exit_codes[code] = description
-        end
+    def clean_path
+      if @path.include?(' ')
+        "\"#{@path}\""
+      else
+        @path
       end
+    end
 
-      def clean_path
-        if @path.include?(' ')
-          "\"#{@path}\""
-        else
-          @path
-        end
-      end
-
-      def run_cmd args, &block
-        result = Array.new
-        Open3.popen3(prepare(args)) do |i, o, e, w|
-          @pid = w.pid
-          { stdout: o, stderr: e }.each do |name, stream|
-            stream.each do |line|
-              result << line
-              if block_given?
-                yield line, name
-              else
-                process_line(line, name)
-              end
+    def run_cmd(args)
+      result = []
+      Open3.popen3(prepare(args)) do |_i, o, e, w|
+        @pid = w.pid
+        { stdout: o, stderr: e }.each do |name, stream|
+          stream.each do |line|
+            result << line
+            if block_given?
+              yield line, name
+            else
+              process_line(line, name)
             end
           end
-          @exit_code = w.value.exitstatus
         end
-        @result = result.join
+        @exit_code = w.value.exitstatus
       end
-
+      @result = result.join
+    end
   end
-
 end
