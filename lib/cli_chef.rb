@@ -4,5 +4,7 @@ require_relative 'cli_chef/version'
 require_relative 'cookbook'
 require_relative 'wrappers/_wrappers'
 
+require 'open3'
+
 module CLIChef
 end

@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 module CLIChef
   class Ingredient < BBLib::LazyClass
-    attr_symbol :name
-    attr_string :description
-    attr_string :flag, allow_nil: true
-    attr_bool :space, default: true
-    attr_array_of Object, :allowed_values, add_rem: true, default: []
-    attr_array_of Symbol, :aliases, add_rem: true, default: []
-    attr_accessor :value
+    attr_symbol :name, serialize: true, always: true
+    attr_string :description, serialize: true, always: true
+    attr_string :flag, allow_nil: true, serialize: true, always: true
+    attr_bool :space, default: true, serialize: true, always: true
+    attr_array_of Object, :allowed_values, add_rem: true, default: [], serialize: true, always: true
+    attr_array_of Symbol, :aliases, add_rem: true, default: [], serialize: true, always: true
+    attr_of Object, :value, serialize: true, always: true
 
     def to_s
       if @value == false

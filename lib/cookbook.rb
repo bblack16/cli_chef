@@ -4,9 +4,9 @@ require_relative 'ingredient'
 module CLIChef
   class Cookbook < BBLib::LazyClass
     attr_string :name, :description
-    attr_valid_file :path, allow_nil: true
-    attr_array_of String, :default_locations, default: []
-    attr_array_of Ingredient, :ingredients
+    attr_valid_file :path, allow_nil: true, serialize: true, always: true
+    attr_array_of String, :default_locations, default: [], serialize: true, always: true
+    attr_array_of Ingredient, :ingredients, serialize: true, always: true
     attr_int :exit_code
     attr_reader :exit_codes, :result
 
@@ -110,7 +110,7 @@ module CLIChef
     end
 
     def clean_path
-      if @path.include?(' ')
+      if @path.to_s.include?(' ')
         "\"#{@path}\""
       else
         @path
