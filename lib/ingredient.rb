@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 module CLIChef
-  class Ingredient < BBLib::LazyClass
+  class Ingredient
+    include BBLib::Effortless
+
     attr_symbol :name, serialize: true, always: true
     attr_string :description, serialize: true, always: true
     attr_string :flag, allow_nil: true, serialize: true, always: true
@@ -10,32 +12,32 @@ module CLIChef
     attr_of Object, :value, serialize: true, always: true
 
     def to_s
-      if @value == false
+      if value == false
         ''
       else
-        "#{@flag}#{@space && @flag ? ' ' : nil}#{clean_value}"
+        "#{flag}#{space && flag ? ' ' : nil}#{clean_value}"
       end
     end
 
-    def value=(v)
-      raise "Invalid value type for #{@name} (#{v}:#{v.class}). Allowed values must match #{@allowed_values}." unless allowed?(v)
-      @value = v
+    def value=(val)
+      raise "Invalid value type for #{name} (#{val}:#{val.class}). Allowed values must match #{allowed_values}." unless allowed?(val)
+      @value = val
     end
 
     def allowed?(value)
-      @allowed_values.any? { |av| av === value || av.nil? && (value == true || value == false) }
+      allowed_values.any? { |av| av === value || av.nil? && (value == true || value == false) }
     end
 
     protected
 
     def clean_value
-      [@value].flatten(1).map do |v|
-        if v == true
+      [value].flatten(1).map do |val|
+        if val == true
           ''
         else
-          v = v.to_s
-          v = "\"#{v}\"" if v.include?(' ') && !v.encap_by?('"')
-          v
+          val = val.to_s
+          val = "\"#{val}\"" if val.include?(' ') && !val.encap_by?('"')
+          val
         end
       end.join(' ')
     end

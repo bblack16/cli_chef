@@ -1,39 +1,66 @@
 # frozen_string_literal: true
 require_relative 'ingredient'
+require_relative 'exit_code'
+require_relative 'result'
 
 module CLIChef
-  class Cookbook < BBLib::LazyClass
-    attr_string :name, :description
-    attr_valid_file :path, allow_nil: true, serialize: true, always: true
-    attr_array_of String, :default_locations, default: [], serialize: true, always: true
-    attr_array_of Ingredient, :ingredients, serialize: true, always: true
-    attr_int :exit_code
-    attr_reader :exit_codes, :result
+  class Cookbook
+    include BBLib::Effortless
 
-    def run(**args, &block)
-      if args.delete(:non_blocking)
-        @thread = Thread.new do
-          run_cmd(args, &block)
-        end
+    attr_string :name, :description
+    attr_str :path, allow_nil: true, serialize: true, always: true
+    attr_array_of String, :default_locations, default: [], serialize: true, always: true, uniq: true, add_rem: true, adder_name: 'add_default_location', remover_name: 'remove_default_location'
+    attr_array_of Ingredient, :ingredients, default: [], serialize: true, always: true, add_rem: true, adder_name: 'add_ingredient', remover_name: 'remove_ingredient'
+    attr_of ExitCode, :exit_code, serialize: false, allow_nil: true
+    attr_array_of ExitCode, :exit_codes, default: [], add_rem: true
+    attr_of Result, :result, default: nil, allow_nil: nil
+
+    def self.prototype
+      @prototype ||= self.new
+    end
+
+    def self.method_missing(*args, &block)
+      if prototype.respond_to?(args.first)
+        prototype.send(*args, *block)
       else
-        run_cmd(args, &block)
+        super
       end
     end
 
-    def exit_status
-      @exit_codes[@exit_code]
+    def exec(string, &block)
+      run_cmd(string, freeform: true, &block)
+      self.result
     end
 
-    def prepare(**args)
-      arguments = args.map do |k, v|
-        if ingredient = @ingredients.find { |i| i.name == k || i.aliases.include?(k) }
+    def run(*args, &block)
+      self.exit_code = nil
+      named = BBLib.named_args(*args)
+      if named.delete(:non_blocking)
+        @thread = Thread.new do
+          run_cmd(named, &block)
+        end
+        running?
+      else
+        run_cmd(named, &block)
+        self.result
+      end
+    end
+
+    def prepare(*args)
+      named = BBLib.named_args(*args)
+      arguments = named.map do |k, v|
+        if ingredient = ingredients.find { |ing| ing.name == k || ing.aliases.include?(k) }
           ingredient.value = v
           ingredient.to_s
         else
-          raise ArgumentError, "Unknown parameter #{k} for #{@name}."
+          raise ArgumentError, "Unknown parameter #{k} for #{name}."
         end
       end.join(' ')
       "#{clean_path} #{arguments}"
+    end
+
+    def prepare_freeform(cmd)
+      "#{clean_path} #{cmd}"
     end
 
     def menu
@@ -47,8 +74,8 @@ module CLIChef
      ███    ███ ███▌    ▄ ███       ███    ███   ███    ███     ███    ███   ███
      ████████▀  █████▄▄██ █▀        ████████▀    ███    █▀      ██████████   ███
                 ▀) \
-             "\n\t#{@name} - #{@description}\n\t" + '-' * 50
-      @ingredients.each do |ingredient|
+             "\n\t#{name} - #{description}\n\t" + '-' * 50
+      ingredients.each do |ingredient|
         menu += "\n\t\t#{ingredient.name} - #{ingredient.description}" \
                 "\n\t\t\tFlag: #{ingredient.flag}" \
                 "\n\t\t\tAllowed Values: #{ingredient.allowed_values.map { |v| v.nil? ? 'nil' : v.to_s }.join(', ')}" \
@@ -65,12 +92,17 @@ module CLIChef
       !running?
     end
 
+    def error?
+      exit_code&.error?
+    end
+
+    def success?
+      exit_code && !error?
+    end
+
     protected
 
-    def lazy_setup
-      @exit_codes = {}
-      @ingredients = []
-      @result = nil
+    def simple_setup
       setup_defaults
       check_default_paths
     end
@@ -85,43 +117,26 @@ module CLIChef
       # puts line
     end
 
-    def add_ingredient(*ingredients)
-      ingredients.each do |ingredient|
-        ingredient = Ingredient.new(ingredient) if ingredient.is_a?(Hash)
-        raise TypeError, "Invalid object type passed as Ingredient: #{ingredient.class}" unless ingredient.is_a?(Ingredient)
-        @ingredients.push(ingredient)
-      end
-    end
-
-    def add_default_location(*paths)
-      @default_locations = (@default_locations + paths).uniq
-    end
-
     def check_default_paths
-      if found = @default_locations.find { |path| File.exist?(path) }
-        self.path = found
-      end
-    end
-
-    def add_exit_codes(hash)
-      hash.each do |code, description|
-        @exit_codes[code] = description
-      end
+      return unless found = default_locations.find { |path| File.exist?(path) || BBLib::OS.which(path) }
+      self.path = found
     end
 
     def clean_path
-      if @path.to_s.include?(' ')
-        "\"#{@path}\""
+      if path.to_s.include?(' ')
+        "\"#{path}\""
       else
-        @path
+        path
       end
     end
 
-    def run_cmd(args)
+    def run_cmd(args, freeform: false)
       result = []
-      Open3.popen3(prepare(args)) do |_i, o, e, w|
-        @pid = w.pid
-        { stdout: o, stderr: e }.each do |name, stream|
+      pid = 0
+      cmd = freeform ? prepare_freeform(args.to_s) : prepare(args)
+      Open3.popen3(cmd) do |sin, out, err, pr|
+        pid = pr.pid
+        { stdout: out, stderr: err }.each do |name, stream|
           stream.each do |line|
             result << line
             if block_given?
@@ -131,9 +146,10 @@ module CLIChef
             end
           end
         end
-        @exit_code = w.value.exitstatus
+        self.exit_code = exit_codes.find { |ec| ec.code == pr.value.exitstatus } || ExitCode.new(code: pr.value.exitstatus)
       end
-      @result = result.join
+      self.result = Result.new(body: result.join, pid: pid, cmd: cmd, exit_code: self.exit_code)
+      raise ExitCode::ExitError, "#{name} (code #{exit_code.code}): #{exit_code.description}" if exit_code.error?
     end
   end
 end
