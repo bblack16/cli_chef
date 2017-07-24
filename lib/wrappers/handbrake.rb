@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 class Handbrake < CLIChef::Cookbook
+
+  attr_reader :status
+
   def help
     run(help: nil)
   end
 
-  def reencode(input, output, **args)
+  def encode(input, output, **args)
     reset_status
     args = { input: input, output: output, non_blocking: true }.merge(args)
     run(args) do |line, stream|
@@ -12,7 +15,8 @@ class Handbrake < CLIChef::Cookbook
     end
   end
 
-  attr_reader :status
+
+  alias reencode encode
 
   def eta_time
     return nil unless running?
@@ -34,11 +38,16 @@ class Handbrake < CLIChef::Cookbook
     self.description = 'HandBrake is a tool for converting video from nearly any format to a selection of modern, widely supported codecs.'
 
     add_exit_codes(
-      0 => 'Clean exit',
-      1 => 'HandBrake encountered a crash condition it could not recover from'
+      { code: 0, description: 'Clean exit' },
+      { code: 1, description: 'Cancelled', error: true },
+      { code: 2, description: 'Invalid Input', error: true },
+      { code: 3, description: 'Initialization Error', error: true },
+      { code: 4, description: 'Unknown Error', error: true }
     )
 
     add_default_location(
+      'handbrakecli.exe',
+      'hanbrakecli',
       'C:/Program Files/Handbrake/HandbrakeCLI.exe',
       'C:/Program Files(x86)/Handbrake/HandbrakeCLI.exe',
       'C:/Handbrake/HandbrakeCLI.exe'
