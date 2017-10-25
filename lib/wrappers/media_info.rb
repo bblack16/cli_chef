@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 class MediaInfo < CLIChef::Cookbook
   def help
-    run(help: nil)
+    run(help: nil).body
   end
 
   def version
-    run(version: true).scan(/(?<= v)\d+\.\d+.*/).first
+    run(version: true).body.scan(/(?<= v)\d+\.\d+.*/).first
   end
 
   def info(file, **args)
     args.delete(:non_blocking)
-    run({ file: file }.merge(args)).split("\n\n").map do |category|
+    run({ file: file }.merge(args)).body.split("\n\n").map do |category|
       lines = category.split("\n")
       if lines.empty?
         nil
@@ -34,8 +34,8 @@ class MediaInfo < CLIChef::Cookbook
     self.description = 'MediaInfo is a convenient unified display of the most relevant technical and tag data for video and audio files.'
 
     add_exit_codes(
-      0 => 'No error',
-      1 => 'Failure'
+      { code: 0, description: 'No error' },
+      { code: 1, description: 'Failure' }
     )
 
     add_default_location(

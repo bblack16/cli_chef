@@ -5,9 +5,13 @@ class SevenZip < CLIChef::Cookbook
   end
 
   def list(archive, **args)
-    args.delete(:non_blocking)
-    list = run({ list: nil, archive: archive, show_technical: nil }.merge(args))
-    list.split('----------').last.split("\n\n").map do |file|
+    run({ list: nil, archive: archive, show_technical: nil }.merge(args))
+    result.body.split('Listing archive: ').flat_map { |arch| next if arch.empty?; arch.scan(/(?<=Path = ).*/i)[1..-1] }.compact
+  end
+
+  def detailed_list(archive, **args)
+    run({ list: nil, archive: archive, show_technical: nil }.merge(args))
+    result.body.split('----------').last.split("\n\n").map do |file|
       file.split("\n").map do |line|
         unless line.empty?
           line = line.split(' = ', 2)
@@ -17,36 +21,36 @@ class SevenZip < CLIChef::Cookbook
     end.map { |f| [f.delete(:path), f] }.to_h
   end
 
-  def add(archive, *files, **args)
+  def add(archive, *files, **args, &block)
     args.delete(:non_blocking)
     files.all? do |file|
-      run({ add: nil, archive: [archive, file], yes: nil }.merge(args)).include?('Everything is Ok')
+      run({ add: nil, archive: [archive, file], yes: nil }.merge(args), &block).body.include?('Everything is Ok') rescue false
     end
   end
 
   def update(archive, *files, **args)
     args.delete(:non_blocking)
     files.all? do |file|
-      run({ update: nil, archive: [archive, file], yes: nil }.merge(args)).include?('Everything is Ok')
+      run({ update: nil, archive: [archive, file], yes: nil }.merge(args)).body.include?('Everything is Ok')
     end
   end
 
   def delete(archive, *files, **args)
     args.delete(:non_blocking)
     files.all? do |file|
-      run({ delete: nil, archive: [archive, file], yes: nil }.merge(args)).include?('Everything is Ok')
+      run({ delete: nil, archive: [archive, file], yes: nil }.merge(args)).body.include?('Everything is Ok')
     end
   end
 
   def extract(archive, **args)
     args.delete(:non_blocking)
     type = args[:full_path] == false ? :extract : :extract_full_paths
-    run({ type => nil, file: archive, yes: nil }.merge(args)).include?('Everything is Ok')
+    run({ type => nil, file: archive, yes: nil }.merge(args)).body.include?('Everything is Ok')
   end
 
   def test(archive, **args)
     args.delete(:non_blocking)
-    run({ test: nil, file: archive, yes: nil }.merge(args)).include?('Everything is Ok')
+    run({ test: nil, file: archive, yes: nil }.merge(args)).body.include?('Everything is Ok')
   end
 
   protected
@@ -56,12 +60,12 @@ class SevenZip < CLIChef::Cookbook
     self.description = '7-Zip is a file archiver with a high compression ratio.'
 
     add_exit_codes(
-      0   => 'No error',
-      1   => 'Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.',
-      2   => 'Fatal error',
-      7   => 'Command line error',
-      8   => 'Not enough memory for operation',
-      255 => 'User stopped the process'
+      { code: 0, description: 'No error' },
+      { code: 1, description: 'Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.' },
+      { code: 2, description: 'Fatal error', error: true },
+      { code: 7, description: 'Command line error', error: true },
+      { code: 8, description: 'Not enough memory for operation', error: true },
+      { code: 255, description: 'User stopped the process', error: true }
     )
 
     add_default_location(
