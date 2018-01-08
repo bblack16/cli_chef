@@ -1,7 +1,4 @@
 module CLIChef
-  # This class encapsulates the result of a command. This includes the response
-  # an the exit code wrapper. If a command is non-blocking this also includes
-  # the running thread.
   class Result
     include BBLib::Effortless
 
