@@ -76,7 +76,7 @@ module CLIChef
       self.result.body = self.result.body + line
       case stream
       when :stderr
-        STDERR.puts line
+        STDERR.puts line unless line.to_s.empty?
       else
         # Nothing happens with stdout in the default job class
         # puts line
