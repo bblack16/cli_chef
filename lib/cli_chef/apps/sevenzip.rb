@@ -1,6 +1,19 @@
 require_relative 'sevenzip/archive'
+require_relative 'sevenzip/util'
 
 class SevenZip < CLIChef::Cookbook
+
+  SUPPORTED_ARCHIVES = [
+    '001', '7z', 'a', 'apm', 'ar', 'arj', 'bz2', 'bzip2', 'cab', 'chi', 'chm',
+    'chq', 'chw', 'cpio', 'cramfs', 'deb', 'dmg', 'doc', 'docx', 'epub', 'esd',
+    'ext', 'ext2', 'ext3', 'ext4', 'fat', 'gz', 'gzip', 'hfs', 'hfsx', 'hxi',
+    'hxq', 'hxr', 'hxs', 'hxw', 'ihex', 'img', 'iso', 'jar', 'lha', 'lib',
+    'lit', 'lzh', 'lzma', 'mbr', 'msi', 'mslz', 'msp', 'mub', 'nsis', 'ntfs',
+    'ods', 'odt', 'pkg', 'ppmd', 'ppt', 'qcow', 'qcow2', 'qcow2c', 'r00', 'rar',
+    'rpm', 'scap', 'squashfs', 'swm', 'tar', 'taz', 'tbz', 'tbz2', 'tgz', 'txz',
+    'udf', 'uefif', 'vdi', 'vhd', 'vmdk', 'wim', 'xar', 'xls', 'xlsx', 'xpi',
+    'xz', 'z', 'zip', 'zipx'
+  ].freeze
 
   self.description = '7-Zip is a file archiver with a high compression ratio.'
 
