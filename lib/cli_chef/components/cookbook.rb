@@ -92,7 +92,7 @@ module CLIChef
 
     def check_default_locations
       return if @path
-      return unless found = default_locations.find { |path| puts "#{path}: #{File.exist?(path)}"; File.exist?(path) || BBLib::OS.which(path) }
+      return unless found = default_locations.find { |path| File.exist?(path) || BBLib::OS.which(path) }
       self.path = found
     end
 
