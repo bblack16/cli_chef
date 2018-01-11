@@ -2,8 +2,8 @@ class SevenZip < CLIChef::Cookbook
   class Archive
     class Dir < Item
 
-      def self.attributes
-        'D'
+      def self.folder
+        '+'
       end
 
     end

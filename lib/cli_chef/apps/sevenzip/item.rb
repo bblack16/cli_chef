@@ -13,11 +13,11 @@ class SevenZip < CLIChef::Cookbook
 
       init_type :loose
 
-      def self.attributes
+      def self.folder
         ''
       end
 
-      setup_init_foundation(:attributes) do |a, b|
+      setup_init_foundation(:folder) do |a, b|
         a.to_s[0] == b.to_s[0]
       end
 
