@@ -55,6 +55,7 @@ class MediaInfo < CLIChef::Cookbook
     when :duration
       value.parse_duration
     when :width, :height
+      value.to_i
     else
       value
     end
