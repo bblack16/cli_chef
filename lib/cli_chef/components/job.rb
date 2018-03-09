@@ -5,9 +5,11 @@ module CLIChef
     attr_str :command
     attr_of Thread, :thread, protected: true
     attr_of Result, :result, default: nil, allow_nil: true
-    attr_ary_of ExitCode, :exit_codes
-    attr_float :percent, :eta, default: 0
+    attr_float :percent, default: 0
+    attr_float :eta, default: nil, allow_nil: true
     attr_of BBLib::TaskTimer, :timer, default: BBLib::TaskTimer.new
+    attr_of Object, :parent, default: nil, allow_nil: true
+    attr_hash :arguments, default: {}
 
     setup_init_foundation(:type)
 
@@ -23,11 +25,12 @@ module CLIChef
       self.percent = 0.0
       self.thread = Thread.new do
         self.result = Result.new(body: '')
+        # TODO Have command killed when parent process dies
         Open3.popen3(command) do |sin, out, err, pr|
           self.result.pid = pr.pid
           { stdout: out, stderr: err }.each do |name, stream|
             stream.each do |line|
-              block ? yield(line, name) : process_line(line, name)
+              block ? yield(line, name, self) : process_line(line, name)
             end
           end
           self.result.exit_code = code_for(pr.value.exitstatus)
@@ -43,6 +46,10 @@ module CLIChef
       exit_codes.find do |ec|
         ec.code == code
       end || ExitCode.new(code)
+    end
+
+    def exit_codes
+      parent ? parent.exit_codes : []
     end
 
     def running?
@@ -68,6 +75,15 @@ module CLIChef
 
     def success?
       !error?
+    end
+
+    def eta
+      @eta || estimate_eta
+    end
+
+    def estimate_eta
+      return 0 unless percent && timer.current && percent.positive?
+      (100 - percent) / timer.current
     end
 
     protected
