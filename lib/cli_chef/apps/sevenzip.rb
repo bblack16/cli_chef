@@ -64,7 +64,8 @@ class SevenZip < CLIChef::Cookbook
     { name: :output_dir, description: 'Specifies a destination directory where files are to be extracted.', flag: '-o', allowed_values: [String], aliases: [:output_directory, :output], flag_delimiter: '' },
     { name: :assume_yes, description: 'Disables most of the normal user queries during 7-Zip execution.', flag: '-y', allowed_values: [nil], aliases: [:yes, :assume, :answer_yes], boolean_argument: true, flag_delimiter: '' },
     { name: :show_technical_information, description: 'Sets technical mode for l (List) command.', flag: '-slt', allowed_values: [nil], aliases: [:slt, :technical, :show_technical], boolean_argument: true, flag_delimiter: '' },
-    { name: :help, description: 'Display the CLI help.', flag: '-h', allowed_values: [nil], aliases: [:h], boolean_argument: true, flag_delimiter: '' }
+    { name: :help, description: 'Display the CLI help.', flag: '-h', allowed_values: [nil], aliases: [:h], boolean_argument: true, flag_delimiter: '' },
+    { name: :show_progress, description: 'Print progress to stdout.', flag: '-bsp1', allowed_values: [nil], aliases: [], boolean_argument: true, flag_delimiter: '' }
   )
 
   def help
@@ -103,8 +104,10 @@ class SevenZip < CLIChef::Cookbook
 
   def extract(archive, **opts)
     type = opts[:full_path] == false ? :extract : :extract_full_paths
-    args = { type => true, file: archive, yes: true }.merge(opts.except(type, :file, :yes))
-    run(**args)
+    args = { type => true, file: archive, yes: true, show_progress: true }.merge(opts.except(type, :file, :yes))
+    run(**args) do |line, stream, job|
+      job.percent = line.extract_numbers.first if line =~ /\d+\%/
+    end
   end
 
   def extract!(archive, **opts)
