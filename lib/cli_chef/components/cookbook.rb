@@ -6,7 +6,6 @@ module CLIChef
     attr_ary_of ExitCode, :exit_codes, singleton: true, add_rem: true
     attr_ary_of Ingredient, :ingredients, singleton: true, add_rem: true
     attr_str :description
-    attr_str :path, singleton: true
     attr_of Class, :default_job_class, default: CLIChef::Job, singleton: true
 
     attr_str :path, allow_nil: true, default_proc: proc { |x| x.class.path }
@@ -24,10 +23,11 @@ module CLIChef
 
     # Executes a string as a command to this CLI wrapper in a job (threaded)
     def execute(string, opts = {}, &block)
+      raise RuntimeError, "A valid path is currently not set for #{self.class}. Please set a valid path to the executable first." unless path
       return execute!(string, opts.except(:synchronous), &block) if opts[:synchronous]
       string = "#{clean_path} #{string}"
       BBLib.logger.debug("About to run cmd: #{string}")
-      (opts.delete(:job_class) || default_job_class).new(opts.merge(command: string, exit_codes: exit_codes)).tap do |job|
+      (opts.delete(:job_class) || default_job_class).new(opts.merge(command: string, parent: self)).tap do |job|
         job.run(&block)
       end
     end
