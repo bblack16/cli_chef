@@ -5,11 +5,11 @@ module CLIChef
     attr_ary_of String, :default_locations, singleton: true, add_rem: true
     attr_ary_of ExitCode, :exit_codes, singleton: true, add_rem: true
     attr_ary_of Ingredient, :ingredients, singleton: true, add_rem: true
-    attr_str :description
+    attr_str :description, singleton: true
     attr_of Class, :default_job_class, default: CLIChef::Job, singleton: true
 
     attr_str :path, allow_nil: true, default_proc: proc { |x| x.class.path }
-    attr_of Result, :result, default: nil, allow_nil: true
+    attr_of Result, :result, default: nil, allow_nil: true, serialize: false
 
     before :path, :check_default_locations
 
