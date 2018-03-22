@@ -7,8 +7,8 @@ module CLIChef
     attr_of Result, :result, default: nil, allow_nil: true
     attr_float :percent, default: 0
     attr_float :eta, default: nil, allow_nil: true
-    attr_of BBLib::TaskTimer, :timer, default: BBLib::TaskTimer.new
-    attr_of Object, :parent, default: nil, allow_nil: true
+    attr_of BBLib::TaskTimer, :timer, default: BBLib::TaskTimer.new, serialize: false
+    attr_of Object, :parent, default: nil, allow_nil: true, serialize: false
     attr_hash :arguments, default: {}
 
     setup_init_foundation(:type)
