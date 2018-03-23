@@ -22,7 +22,7 @@ module CLIChef
       allowed!(value)
       return '' if boolean_argument?
       [value].flatten(1).map(&:to_s).map do |arg|
-        arg.include?(/\s/) && !arg.encap_by?('"') ? "\"#{arg.gsub('"','\\"')}\"" : arg
+        arg.match?(/\s/) && !arg.encap_by?('"') ? "\"#{arg.gsub('"','\\"')}\"" : arg
       end.join(delimiter)
     end
 
