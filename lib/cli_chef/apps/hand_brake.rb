@@ -1,3 +1,4 @@
+require 'cli_chef' unless defined?(CLIChef::VERSION)
 require_relative 'hand_brake/hand_brake_job'
 
 class HandBrake < CLIChef::Cookbook

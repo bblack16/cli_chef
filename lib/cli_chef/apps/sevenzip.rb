@@ -1,3 +1,4 @@
+require 'cli_chef' unless defined?(CLIChef::VERSION)
 require_relative 'sevenzip/archive'
 require_relative 'sevenzip/util'
 

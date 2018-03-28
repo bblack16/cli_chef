@@ -1,3 +1,5 @@
+require 'cli_chef' unless defined?(CLIChef::VERSION)
+
 class MediaInfo < CLIChef::Cookbook
   self.description = 'MediaInfo is a convenient unified display of the most relevant technical and tag data for video and audio files.'
 
