@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["d2sm10@hotmail.com"]
 
   spec.summary       = %q{CLI Chef is a simple and quick CLI wrapper framework for Ruby.}
-  spec.description   = %q{CLI Chef is a simple and quick CLI wrapper framework for Ruby.}
+  spec.description   = %q{CLI Chef makes building command line wrappers easy and simple to incorporate with your Ruby projects.}
   spec.homepage      = "http://github.com/bblack16/cli-chef"
   spec.license       = "MIT"
 
