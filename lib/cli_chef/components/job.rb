@@ -35,7 +35,7 @@ module CLIChef
           end
           self.result.exit_code = code_for(pr.value.exitstatus)
         end
-        self.precent = 100.0
+        self.percent = 100.0
         self.timer.stop
         self.result
       end
