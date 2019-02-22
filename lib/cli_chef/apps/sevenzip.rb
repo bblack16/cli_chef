@@ -1,4 +1,5 @@
 require 'cli_chef' unless defined?(CLIChef::VERSION)
+require_relative 'sevenzip/exceptions/exception'
 require_relative 'sevenzip/archive'
 require_relative 'sevenzip/util'
 
@@ -66,7 +67,8 @@ class SevenZip < CLIChef::Cookbook
     { name: :assume_yes, description: 'Disables most of the normal user queries during 7-Zip execution.', flag: '-y', allowed_values: [nil], aliases: [:yes, :assume, :answer_yes], boolean_argument: true, flag_delimiter: '' },
     { name: :show_technical_information, description: 'Sets technical mode for l (List) command.', flag: '-slt', allowed_values: [nil], aliases: [:slt, :technical, :show_technical], boolean_argument: true, flag_delimiter: '' },
     { name: :help, description: 'Display the CLI help.', flag: '-h', allowed_values: [nil], aliases: [:h], boolean_argument: true, flag_delimiter: '' },
-    { name: :show_progress, description: 'Print progress to stdout.', flag: '-bsp1', allowed_values: [nil], aliases: [], boolean_argument: true, flag_delimiter: '' }
+    { name: :show_progress, description: 'Print progress to stdout.', flag: '-bsp1', allowed_values: [nil], aliases: [], boolean_argument: true, flag_delimiter: '' },
+    { name: :files, description: 'Add file name or pattern arguments to various options', flag: nil, allowed_values: [String, Array], aliases: [:file], boolean_argument: false, flag_delimiter: '' }
   )
 
   def help
@@ -77,6 +79,11 @@ class SevenZip < CLIChef::Cookbook
     help.scan(/(?<=7-zip )\d+\.\d+\s?\w*/i).first
   end
 
+  def self.archive?(file)
+    ext = File.extname(file).sub('.', '').downcase
+    SUPPORTED_ARCHIVES.include?(ext) || ext =~ /^\d{3}$/
+  end
+
   def self.archive(path)
     SevenZip::Archive.new(path: path)
   end
@@ -85,14 +92,18 @@ class SevenZip < CLIChef::Cookbook
 
   def list(archive, **opts)
     args = { list: true, archive: archive, show_technical: true }.merge(opts.except(:list, :archive, :show_technical))
-    run!(args).body.split('----------', 2).last.split("\n\n").map do |details|
+    result = run!(args)
+    raise(InvalidArchive, archive) if result.body =~ /Can not open the file as archive/i
+    result.body.split('----------', 2).last.split("\n\n").map do |details|
       hash = details.split("\n").hmap do |attribute|
         next if attribute.empty?
         key, value = attribute.split(' = ', 2)
         [key.downcase.gsub(/\s+/, '_').to_sym, value]
       end
+      next unless hash[:path]
+      hash[:folder] = (hash[:size] || 0).to_i.zero? ? '+' : '-' unless hash.include?(:folder)
       Archive::Item.new(hash)
-    end
+    end.compact
   end
 
   def list_files(archive, **opts)
@@ -134,5 +145,48 @@ class SevenZip < CLIChef::Cookbook
 
   def test!(archive, **opts)
     test(archive, opts.merge(synchronous: true))
+  end
+
+  def self.multi_part?(file)
+    path = File.dirname(file)
+    case file
+    when /\.r\d+$/, /\.part\d+/i, /\.\d+$/
+      true
+    else
+      !BBLib.scan_files(path, /#{file.file_name(false).sub(/part\d+$/, '')}\.(r\d+$|\d+$|\.part\d+[\.$])/i).empty?
+    end
+  end
+
+  def self.all_parts(file)
+    path = File.dirname(file)
+    (BBLib.scan_files(path, /#{file.file_name(false).sub(/\.part\d+$/, '')}\.(r\d+$|\d+$|part\d+[\.$])/i) << file).uniq.sort
+  end
+
+  def self.first_part(file)
+    path = File.dirname(file)
+    case file
+    when /\.r\d+$/
+      base = file.file_name.sub(/\.r\d+$/i, '')
+      BBLib.scan_files(path, /#{Regexp.escape(base)}\.r\d+$/i).map do |file|
+        return file if file =~ /\.rar$/i
+        part_number = file.scan(/(?<=r)\d+$/i).first.to_i
+        [part_number, file]
+      end.sort_by { |a| a[0] }&.first&.last
+    when /\.part\d+/i
+      base = file.file_name.sub(/\.part\d+[\.$].*/i, '')
+      BBLib.scan_files(path, /#{Regexp.escape(base)}\.part\d+[\.$]/i).map do |file|
+        return file if file =~ /\.rar$|\.7z$/i
+        part_number = file.scan(/(?<=\.part)\d+/i).first.to_i
+        [part_number, file]
+      end.sort_by { |a| a[0] }&.first&.last
+    when /\.\d+$/
+      base = file.file_name.sub(/\.\d+$/, '')
+      BBLib.scan_files(path, /#{Regexp.escape(base)}\.\d+$/).map do |file|
+        part_number = file.scan(/(?<=\.)\d+$/).first.to_i
+        [part_number, file]
+      end.sort_by { |a| a[0] }&.first&.last
+    else
+      return file
+    end || file
   end
 end

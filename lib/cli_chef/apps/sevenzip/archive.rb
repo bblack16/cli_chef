@@ -6,7 +6,7 @@ class SevenZip < CLIChef::Cookbook
   class Archive
     include BBLib::Effortless
 
-    attr_file :path, required: true
+    attr_str :path, required: true, arg_at: 0
     attr_ary_of File, :files
     attr_ary_of Dir, :dirs
 
@@ -32,7 +32,7 @@ class SevenZip < CLIChef::Cookbook
 
     def load_archive
       self.files.clear
-      items = SevenZip.list(self.path)
+      items = ::File.exist?(path) ? SevenZip.list(self.path) : []
       items.map { |i| i.archive = self }
       self.dirs = items.find_all { |i| i.is_a?(Dir) }
       self.files = items.find_all { |i| !i.is_a?(Dir) }

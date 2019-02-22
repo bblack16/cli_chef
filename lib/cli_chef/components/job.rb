@@ -60,6 +60,8 @@ module CLIChef
       !running?
     end
 
+    alias finished? done?
+
     def duration
       timer.current || timer.last
     end
@@ -89,14 +91,9 @@ module CLIChef
     protected
 
     def process_line(line, stream = :stdout)
+      # This can be overriden in child job types. Here we just append the line
+      # to the body of the result
       self.result.body = self.result.body + line
-      case stream
-      when :stderr
-        STDERR.puts line unless line.to_s.empty?
-      else
-        # Nothing happens with stdout in the default job class
-        # puts line
-      end
     end
 
   end

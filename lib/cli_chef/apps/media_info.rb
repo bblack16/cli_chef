@@ -1,4 +1,5 @@
 require 'cli_chef' unless defined?(CLIChef::VERSION)
+require_relative 'media_info/file'
 
 class MediaInfo < CLIChef::Cookbook
   self.description = 'MediaInfo is a convenient unified display of the most relevant technical and tag data for video and audio files.'
@@ -31,35 +32,58 @@ class MediaInfo < CLIChef::Cookbook
   end
 
   def info(file, full = false)
-    run!(file: file, full: full).body.split("\n\n").hmap do |category|
+    tracks = run!(file: file, full: full).body.split("\n\n").map do |category|
       lines = category.split("\n")
       next if lines.empty?
-      [
-        lines.shift.strip.downcase.method_case,
-        lines.hmap do |line|
-          key, value = line.split(':', 2)
-          key = key.downcase.method_case.to_sym
-          [
-            key,
-            convert_value(key, value.strip)
-          ]
-        end
-      ]
-    end.keys_to_sym
+      {
+        type: lines.shift.split(' ').first.downcase.method_case.to_sym
+      }.merge(lines.hmap { |line| process_line(line) }).keys_to_sym
+    end.compact
+    MediaInfo::File.new(tracks.shift.except(:type).merge(path: file)) do |media|
+      media.tracks = tracks
+    end
   end
 
   protected
 
+  IGNORE = [:complete_name]
+
+  def process_line(line)
+    key, value = line.split(':', 2)
+    key = key.strip.downcase.method_case.to_sym
+    return nil if IGNORE.include?(key)
+    [
+      remap(key),
+      convert_value(key, value.strip)
+    ]
+  end
+
   def convert_value(key, value)
     case key
-    when :file_size
+    when :file_size, :bit_rate, :stream_size, :size
       value.parse_file_size
     when :duration
       value.parse_duration
     when :width, :height
-      value.to_i
+      value.sub(/\s+/, '').to_i
     else
       value
     end
+  end
+
+  MAPPING = {
+    unique_id: :id,
+    stream_size: :size,
+    file_size: :size,
+    delay_relative_to_video: :delay,
+    overall_bit_rate: :bit_rate,
+    channel_s: :channels,
+    track_name: :title,
+    overall_bit_rate_mode: :bit_rate_mode
+  }
+
+
+  def remap(key)
+    MAPPING[key] || key
   end
 end
