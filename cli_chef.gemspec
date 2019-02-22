@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["d2sm10@hotmail.com"]
 
   spec.summary       = %q{CLI Chef is a simple and quick CLI wrapper framework for Ruby.}
-  spec.description   = %q{CLI Chef is a simple and quick CLI wrapper framework for Ruby.}
+  spec.description   = %q{CLI Chef makes building command line wrappers easy and simple to incorporate with your Ruby projects.}
   spec.homepage      = "http://github.com/bblack16/cli-chef"
   spec.license       = "MIT"
 
@@ -31,5 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec"
 
-  spec.add_runtime_dependency 'bblib', '~> 0.4'
+  spec.add_runtime_dependency 'bblib', '~> 1.0'
 end
