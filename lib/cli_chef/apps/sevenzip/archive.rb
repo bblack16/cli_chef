@@ -9,8 +9,10 @@ class SevenZip < CLIChef::Cookbook
     attr_str :path, required: true, arg_at: 0
     attr_ary_of File, :files
     attr_ary_of Dir, :dirs
+    attr_bool :loaded, default: false
 
-    after :path=, :load_archive
+    before :files, :load_archive
+    before :dirs, :load_archive
 
     def size
       ::File.size(path)
@@ -28,15 +30,20 @@ class SevenZip < CLIChef::Cookbook
       SevenZip.delete(path, file, **opts)
     end
 
+    def reload
+      self.loaded = false
+      load_archive
+    end
+
     protected
 
     def load_archive
-      self.files.clear
+      return true if loaded?
       items = ::File.exist?(path) ? SevenZip.list(self.path) : []
       items.map { |i| i.archive = self }
       self.dirs = items.find_all { |i| i.is_a?(Dir) }
       self.files = items.find_all { |i| !i.is_a?(Dir) }
-      true
+      self.loaded = true
     end
 
   end

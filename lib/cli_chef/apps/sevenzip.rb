@@ -51,8 +51,8 @@ class SevenZip < CLIChef::Cookbook
     { name: :password, description: 'Specifies password.', flag: '-p', allowed_values: [String], aliases: [], flag_delimiter: '' },
     { name: :recurse, description: 'Specifies the method of treating wildcards and filenames on the command line.    -r  Enable recurse subdirectories.    -r-  Disable recurse subdirectories. This option is default for all commands.    -r0  Enable recurse subdirectories only for wildcard names.', flag: '-r', allowed_values: [nil, '-', '0', 0], aliases: [], flag_delimiter: '' },
     { name: :create_sfx, description: 'Creates self extracting archive.', flag: '-sfx', allowed_values: [nil, '7z.sfx', 'tzCon.sfx', '7zS.sfx', '7zSD.sfx'], aliases: [], flag_delimiter: '' },
-    { name: :stdin, description: 'Causes 7-Zip to read data from stdin (standard input) instead of from disc files.', flag: '-si', allowed_values: [nil, String], aliases: [], flag_delimiter: '' },
-    { name: :stdout, description: 'Causes 7-Zip to write output data to stdout (standard output stream).', flag: '-so', allowed_values: [nil, String], aliases: [], flag_delimiter: '' },
+    { name: :stdin, description: 'Causes 7-Zip to read data from stdin (standard input) instead of from disc files.', flag: '-si', allowed_values: [nil], aliases: [], boolean_argument: true, flag_delimiter: '' },
+    { name: :stdout, description: 'Causes 7-Zip to write output data to stdout (standard output stream).', flag: '-so', allowed_values: [nil], aliases: [], boolean_argument: true, flag_delimiter: '' },
     { name: :compress_shared_files, description: 'Compresses files open for writing by another applications.', flag: '-ssw', allowed_values: [nil], aliases: [], flag_delimiter: '' },
     { name: :type, description: 'Specifies the type of archive.', flag: '-t', allowed_values: ['*', '7z', 'xz', 'split', 'zip', 'gzip', 'bzip2', 'tar', 'mbr', 'vhd', 'udf'], aliases: [], flag_delimiter: '' },
     { name: :update_switch, description: 'Specifies how to update files in an archive and (or) how to create new archives.', flag: '-u', allowed_values: [], aliases: [], flag_delimiter: '' },
@@ -94,6 +94,7 @@ class SevenZip < CLIChef::Cookbook
     args = { list: true, archive: archive, show_technical: true }.merge(opts.except(:list, :archive, :show_technical))
     result = run!(args)
     raise(InvalidArchive, archive) if result.body =~ /Can not open the file as archive/i
+    archive = Archive.new(archive)
     result.body.split('----------', 2).last.split("\n\n").map do |details|
       hash = details.split("\n").hmap do |attribute|
         next if attribute.empty?
@@ -102,7 +103,7 @@ class SevenZip < CLIChef::Cookbook
       end
       next unless hash[:path]
       hash[:folder] = (hash[:size] || 0).to_i.zero? ? '+' : '-' unless hash.include?(:folder)
-      Archive::Item.new(hash)
+      Archive::Item.new(hash.merge(archive: archive))
     end.compact
   end
 
@@ -116,9 +117,10 @@ class SevenZip < CLIChef::Cookbook
 
   def extract(archive, **opts)
     type = opts[:full_path] == false ? :extract : :extract_full_paths
-    args = { type => true, file: archive, yes: true, show_progress: true }.merge(opts.except(type, :file, :yes))
+    args = { type => true, file: archive, yes: true, show_progress: opts[:stdout] ? false : true }.merge(opts.except(type, :file, :yes))
     run(**args) do |line, stream, job|
       job.percent = line.extract_numbers.first if line =~ /\d+\%/
+      job.process_line(line, stream)
     end
   end
 
@@ -167,23 +169,26 @@ class SevenZip < CLIChef::Cookbook
     case file
     when /\.r\d+$/
       base = file.file_name.sub(/\.r\d+$/i, '')
-      BBLib.scan_files(path, /#{Regexp.escape(base)}\.r\d+$/i).map do |file|
-        return file if file =~ /\.rar$/i
+      Dir.entries(path).map do |file|
+        next unless /#{Regexp.escape(base)}\.r\d+$/i =~ file
+        return File.join(path, file) if file =~ /\.rar$/i
         part_number = file.scan(/(?<=r)\d+$/i).first.to_i
-        [part_number, file]
+        [part_number, File.join(path, file)]
       end.sort_by { |a| a[0] }&.first&.last
     when /\.part\d+/i
       base = file.file_name.sub(/\.part\d+[\.$].*/i, '')
-      BBLib.scan_files(path, /#{Regexp.escape(base)}\.part\d+[\.$]/i).map do |file|
-        return file if file =~ /\.rar$|\.7z$/i
+      Dir.entries(path).map do |file|
+        next unless /#{Regexp.escape(base)}\.part\d+[\.$]/i =~ file
+        return File.join(path, file) if file =~ /\.rar$|\.7z$/i
         part_number = file.scan(/(?<=\.part)\d+/i).first.to_i
-        [part_number, file]
+        [part_number, File.join(path, file)]
       end.sort_by { |a| a[0] }&.first&.last
     when /\.\d+$/
       base = file.file_name.sub(/\.\d+$/, '')
-      BBLib.scan_files(path, /#{Regexp.escape(base)}\.\d+$/).map do |file|
+      Dir.entries(path).map do |file|
+        next unless /#{Regexp.escape(base)}\.\d+$/ =~ file
         part_number = file.scan(/(?<=\.)\d+$/).first.to_i
-        [part_number, file]
+        [part_number, File.join(path, file)]
       end.sort_by { |a| a[0] }&.first&.last
     else
       return file

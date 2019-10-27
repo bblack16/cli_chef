@@ -22,12 +22,17 @@ class SevenZip < CLIChef::Cookbook
       end
 
       def extract(**opts)
-        raise RunTimeError, "No archive has been set for this #{self.class} so it cannot be extracted." unless archive
+        raise RuntimeError, "No archive has been set for this #{self.class} so it cannot be extracted." unless archive
         SevenZip.extract([archive.path, self.path], **opts)
       end
 
+      def extract!(**opts)
+        raise RuntimeError, "No archive has been set for this #{self.class} so it cannot be extracted." unless archive
+        SevenZip.extract!([archive.path, self.path], **opts)
+      end
+
       def delete(**opts)
-        raise RunTimeError, "No archive has been set for this #{self.class} so it cannot be deleted." unless archive
+        raise RuntimeError, "No archive has been set for this #{self.class} so it cannot be deleted." unless archive
         archive.delete(self.path)
       end
     end
