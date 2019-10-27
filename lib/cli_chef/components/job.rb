@@ -88,8 +88,6 @@ module CLIChef
       (100 - percent) / timer.current
     end
 
-    protected
-
     def process_line(line, stream = :stdout)
       # This can be overriden in child job types. Here we just append the line
       # to the body of the result
